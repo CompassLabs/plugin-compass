@@ -21,7 +21,7 @@ import {
     Endpoint,
     getNullableSchema,
 } from './utils';
-import {getAccount, getWalletClient} from '../providers/wallet';
+import {getAccount, getWalletClient} from './wallet';
 import { PrivateKeyAccount } from 'viem/accounts';
 import { WalletClient, PublicClient } from 'viem';
 
