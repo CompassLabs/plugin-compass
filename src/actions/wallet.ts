@@ -32,11 +32,11 @@ export const getAccount = (): PrivateKeyAccount => {
     return account;
 };
 
-export const getWalletClient = (account: PrivateKeyAccount, chain: string): WalletClient => {
-    const chainConfig = CHAIN_CONFIG[chain];
+export const getWalletClient = (account: PrivateKeyAccount, chain_name: string): WalletClient => {
+    const chainConfig = CHAIN_CONFIG[chain_name];
     if (!chainConfig) {
-        throw new Error(`Chain ${chain} is not supported`);
+        throw new Error(`Chain ${chain_name} is not supported`);
     }
-    const { chain_, rpcUrl } = chainConfig;
-    return createWalletClient({chain: chain_, transport: http(rpcUrl), account}).extend(publicActions);
-}
+    const { chain, rpcUrl } = chainConfig;
+    return createWalletClient({chain, transport: http(rpcUrl), account}).extend(publicActions);
+};

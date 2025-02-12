@@ -30,7 +30,6 @@ async function runCompassAction(endpoint: Endpoint, argument: unknown) {
     try {
         const apiClient = createApiClient('https://api.compasslabs.ai');
         const response = await apiClient[endpoint.method](endpoint.path, argument);
-        console.log(response);
         return response;
     } catch (error) {
         console.log(error);
@@ -95,7 +94,7 @@ class CompassAction implements Action {
             nullableRequestSchema
         );
 
-        elizaLogger.log(`Running endpoint ${path} with argument ${JSON.stringify(endpointCallArgument)}`);
+        console.log(`Running endpoint ${path} with argument ${JSON.stringify(endpointCallArgument)}`);
 
         if (!checkContent(endpointCallArgument, requestSchema)) {
             const missingFields = getMissingFields(endpointCallArgument, requestSchema);
@@ -105,7 +104,7 @@ class CompassAction implements Action {
             return;
         }
         const compassApiResponse = await runCompassAction(this.endpoint, endpointCallArgument);
-
+        console.log(`API output: ${JSON.stringify(compassApiResponse)}`)
         if (path.includes('/get')) {
             const readEndpointContext = composeReadEndpointResponseContext(
                 responseSchema,
@@ -125,9 +124,7 @@ class CompassAction implements Action {
         } else {
             const chain = (endpointCallArgument as { chain: string }).chain;
             const walletClient = getWalletClient(this.account, chain) as WalletClient & PublicClient;
-            const signedTransaction = await walletClient.signTransaction(compassApiResponse);
-            const txHash = await walletClient.sendTransaction(signedTransaction);
-            
+            const txHash = await walletClient.sendTransaction(compassApiResponse);
             const txReceipt = await walletClient.waitForTransactionReceipt({hash: txHash});
 
             if (txReceipt.status === "success") {
