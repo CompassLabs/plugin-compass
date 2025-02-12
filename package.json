@@ -44,8 +44,5 @@
     "compass-api-tools": "^1.0.0",
     "viem": "2.21.58",
     "zod": "^3.24.2"
-  },
-  "resolutions": {
-       "zod": "3.24.2"
-     }
+  }
 }
