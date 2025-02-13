@@ -1,24 +1,5 @@
 import { z, ZodSchema, ZodObject, ZodOptional, ZodNullable } from 'zod';
-import { argumentTemplate, readEndpointResponseTemplate, errorTemplate } from './templates';
-import {
-    IAgentRuntime,
-    State,
-    generateObject,
-    ModelClass,
-    composeContext,
-    generateText,
-} from '@elizaos/core';
 
-function composeEndpointArgumentContext(
-    schema: z.ZodObject<any, any>,
-    currentState: State,
-    accountAddress: string
-): string {
-    return composeContext({
-        state: currentState,
-        template: argumentTemplate(schema, accountAddress),
-    });
-}
 
 function checkContent(object: any, schema: z.ZodObject<any, any>): boolean {
     return schema.safeParse(object).success;
@@ -48,68 +29,6 @@ function getMissingFields(
     }
 
     return missingFields;
-}
-
-async function generateArgument(
-    runtime: IAgentRuntime,
-    context: string,
-    schema: z.ZodObject<any, any>
-): Promise<unknown> {
-    const { object } = await generateObject({
-        runtime,
-        context,
-        modelClass: ModelClass.LARGE,
-        schema: schema as any,
-    });
-
-    return object;
-}
-
-function composeReadEndpointResponseContext(
-    modelResponse: object,
-    currentState: State,
-) {
-    return composeContext({
-        state: currentState,
-        template: readEndpointResponseTemplate(modelResponse),
-    });
-}
-
-
-async function generateReadEndpointResponse(
-    runtime: IAgentRuntime,
-    context: string
-): Promise<string> {
-    const response = await generateText({
-        runtime,
-        context,
-        modelClass: ModelClass.LARGE,
-    });
-
-    return response;
-}
-
-function composeErrorContext(
-    error: string,
-    currentState: State
-) {
-    return composeContext({
-        state: currentState,
-        template: errorTemplate(error),
-    });
-}
-
-async function generateErrorResponse(
-    runtime: IAgentRuntime,
-    context: string
-): Promise<string> {
-    const response = await generateText({
-        runtime,
-        context,
-        modelClass: ModelClass.LARGE,
-    });
-
-    return response;
 }
 
 
@@ -154,15 +73,24 @@ function getNullableSchema<T extends ZodSchema>(schema: T): ZodSchema {
     return schema.nullable() as unknown as T;
 }
 
+
+function getZodDescriptions<T extends ZodObject<any, any>>(schema: T): Record<string, string> {
+    const descriptions: Record<string, string> = {};
+    const shape = schema.shape;
+    for (const key in shape) {
+        if (isZodObject(shape[key])) {
+            descriptions[key] = JSON.stringify(getZodDescriptions(shape[key] as ZodObject<any, any>));
+        } else {
+            descriptions[key] = shape[key].description;
+        }
+    }
+    return descriptions;
+}
+
 export {
-    composeEndpointArgumentContext,
     checkContent,
     getMissingFields,
-    generateArgument,
-    composeReadEndpointResponseContext,
-    generateReadEndpointResponse,
     Endpoint,
     getNullableSchema,
-    composeErrorContext,
-    generateErrorResponse
+    getZodDescriptions
 };

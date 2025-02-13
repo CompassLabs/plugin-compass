@@ -1,18 +1,44 @@
 # @elizaos/plugin-compass
 
-This is a plugin for integrating [Compass API](https://api.compasslabs.ai/) into the ElizaOS ecosystem, enabling execution on the DeFi protocols integrated into the Compass API.
+The `@elizaos/plugin-compass` is a powerful plugin designed to seamlessly integrate the [Compass API](https://api.compasslabs.ai/) into the ElizaOS ecosystem. This integration facilitates the execution of operations on DeFi protocols supported by the Compass API.
 
-## Description
+## Overview
 
-The compass plugin provides actions to be executed through the use of the [`compass-api-tools`](https://www.npmjs.com/package/compass-api-tools) TypeScript SDK for the API where a number of endpoint calls and corresponding schemas are implemented.
+The Compass plugin leverages the [`compass-api-tools`](https://www.npmjs.com/package/compass-api-tools) TypeScript SDK to provide a suite of actions. These actions correspond to various endpoint calls and schemas defined by the Compass API, enabling efficient interaction with the API.
 
-## Currently supported protocols
+## Configuration
 
-The list of protocols and available actions can be found on [Compass API](https://api.compasslabs.ai/) page.
+The plugin requires the following env variables to be set:
 
-## Installation
+```
+COMPASS_WALLET_PRIVATE_KEY= <wallet private key>
+COMPASS_ARBITRUM_RPC_URL= <arbitrum mainnet rpc url>
+COMPASS_ETHEREUM_RPC_URL= <ethereum mainnet rpc url >
+COMPASS_BASE_RPC_URL= <base mainnet rpc url>
+```
 
+or this can directly be set in the character configuration:
+
+```
+...
+"settings": {
+    "secrets": {
+        "COMPASS_WALLET_PRIVATE_KEY": <wallet private key>,
+        "COMPASS_ARBITRUM_RPC_URL": <arbitrum mainnet rpc url>,
+        "COMPASS_ETHEREUM_RPC_URL": <ethereum mainnet rpc url>,
+        "COMPASS_BASE_RPC_URL": <base mainnet rpc url>
+    }
+},
+...
+```
+
+## Supported Protocols
+
+For a comprehensive list of supported protocols and available actions, please visit the [Compass API](https://api.compasslabs.ai/) documentation page.
+
+## Installation Instructions
+
+To install the plugin, use the following command:
 ```
 pnpm install @elizaos/plugin-compass
 ```
-

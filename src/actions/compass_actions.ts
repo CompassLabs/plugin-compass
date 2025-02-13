@@ -11,20 +11,26 @@ import {
 } from '@elizaos/core';
 import { z } from 'zod';
 import {
-    composeEndpointArgumentContext,
     checkContent,
     getMissingFields,
+    Endpoint,
+    getNullableSchema,
+    getZodDescriptions
+} from '../utils/schema';
+import {
+    composeEndpointArgumentContext,
     generateArgument,
     composeReadEndpointResponseContext,
     generateReadEndpointResponse,
-    Endpoint,
-    getNullableSchema,
     composeErrorContext,
-    generateErrorResponse
-} from './utils';
+    generateErrorResponse,
+    composeMissingFieldsContext,
+    generateMissingFieldsResponse
+} from '../utils/context';
 import {getAccount, getWalletClient} from './wallet';
 import { PrivateKeyAccount } from 'viem/accounts';
 import { WalletClient, PublicClient } from 'viem';
+import {validateCompassConfig} from '../environment';
 
 type CompassApiResponse = {
     success: true;
@@ -94,7 +100,8 @@ class CompassAction implements Action {
         this.endpoint = endpoint;
         this.account = account;
     }
-    validate: Validator = async (_runtime: IAgentRuntime) => {
+    validate: Validator = async (runtime: IAgentRuntime) => {
+        await validateCompassConfig(runtime);
         return true;
     };
 
@@ -109,6 +116,10 @@ class CompassAction implements Action {
         const requestSchema = this.endpoint.parameters[0].schema;
         const nullableRequestSchema = getNullableSchema(requestSchema) as z.ZodObject<any, any>;
         const accountAddress = this.account.address
+        const responseSchema = this.endpoint.response
+
+        const requestSchemaDescriptions = getZodDescriptions(requestSchema);
+        const responseSchemaDescriptions = getZodDescriptions(responseSchema);
         
         const argumentContext = composeEndpointArgumentContext(requestSchema, state, accountAddress);
         const endpointCallArgument = await generateArgument(
@@ -121,14 +132,16 @@ class CompassAction implements Action {
 
         if (!checkContent(endpointCallArgument, requestSchema)) {
             const missingFields = getMissingFields(endpointCallArgument, requestSchema);
+            const missingFieldsContext = composeMissingFieldsContext(missingFields, state, requestSchemaDescriptions);
+            const missingFieldsResponse = await generateMissingFieldsResponse(runtime, missingFieldsContext);
             callback({
-                text: `I will need more information to make the request, tell me more about these fields: ${missingFields}`,
+                text: `${missingFieldsResponse}`,
             });
             return;
         }
         const compassApiResponse = await runCompassAction(this.endpoint, endpointCallArgument);
         if (compassApiResponse.success) {
-            return await this.processSuccessfulApiResponse(path, compassApiResponse.data, state, runtime, endpointCallArgument, callback);
+            return await this.processSuccessfulApiResponse(path, compassApiResponse.data, state, runtime, endpointCallArgument, callback, responseSchemaDescriptions);
         } else {
             const errorContext = composeErrorContext((JSON.stringify((compassApiResponse.data as { message: string }).message)), state)
             const errorResponse = await generateErrorResponse(runtime, errorContext);
@@ -136,15 +149,16 @@ class CompassAction implements Action {
         }
     };
 
-    processSuccessfulApiResponse = async function (path: string, compassApiResponse: object, state: State, runtime: IAgentRuntime, endpointCallArgument: unknown, callback: HandlerCallback): Promise<boolean> {
+    processSuccessfulApiResponse = async function (path: string, compassApiResponse: object, state: State, runtime: IAgentRuntime, endpointCallArgument: unknown, callback: HandlerCallback, responseSchemaDescriptions: Record<any, any>): Promise<boolean> {
         if (path.includes('/get')) {
             const readEndpointContext = composeReadEndpointResponseContext(
                 compassApiResponse,
-                state
+                state,
+                responseSchemaDescriptions
             );
             const readEndpointResponse = await generateReadEndpointResponse(
                 runtime,
-                readEndpointContext
+                readEndpointContext,
             );
             callback({
                 text: `${readEndpointResponse}`,

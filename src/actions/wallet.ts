@@ -1,6 +1,6 @@
 import { arbitrum, base, mainnet } from 'viem/chains';
 import { privateKeyToAccount, PrivateKeyAccount } from 'viem/accounts';
-import { WalletClient, PublicClient, createWalletClient, publicActions, http, Hex } from 'viem';
+import { WalletClient, createWalletClient, publicActions, http } from 'viem';
 
 export const CHAIN_CONFIG = {
     'ethereum:mainnet': {
