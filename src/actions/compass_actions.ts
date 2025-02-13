@@ -7,8 +7,7 @@ import {
     State,
     HandlerCallback,
     Handler,
-    Validator,
-    elizaLogger
+    Validator
 } from '@elizaos/core';
 import { z } from 'zod';
 import {
@@ -20,20 +19,45 @@ import {
     generateReadEndpointResponse,
     Endpoint,
     getNullableSchema,
+    composeErrorContext,
+    generateErrorResponse
 } from './utils';
-import {getAccount, getWalletClient} from './wallet';
+import {getAccount, getWalletClient} from '../providers/wallet';
 import { PrivateKeyAccount } from 'viem/accounts';
 import { WalletClient, PublicClient } from 'viem';
 
+type CompassApiResponse = {
+    success: true;
+    data: object;
+} | {
+    success: false;
+    data: { message: string };
+};
 
-async function runCompassAction(endpoint: Endpoint, argument: unknown) {
+function getApiClient() {
+    return createApiClient('https://api.compasslabs.ai');
+}
+
+async function runCompassAction(endpoint: Endpoint, argument: unknown): Promise<CompassApiResponse> {
+    let data: object;
+    let success: boolean;
+    let output: CompassApiResponse;
     try {
-        const apiClient = createApiClient('https://api.compasslabs.ai');
+        const apiClient = getApiClient();
         const response = await apiClient[endpoint.method](endpoint.path, argument);
-        return response;
+        data = response;
+        success = true;
+        output = { success, data };
     } catch (error) {
-        console.log(error);
+        if (error.status) {
+            data = { message: error.response.data };
+        } else {
+            data = { message: "Likely invalid request schema" };
+        }
+        success = false;
+        output = { success, data } as CompassApiResponse;
     }
+    return output;
 }
 
 class CompassAction implements Action {
@@ -70,21 +94,20 @@ class CompassAction implements Action {
         this.endpoint = endpoint;
         this.account = account;
     }
-    validate: Validator = async (runtime: IAgentRuntime) => {
+    validate: Validator = async (_runtime: IAgentRuntime) => {
         return true;
     };
 
     handler: Handler = async (
         runtime: IAgentRuntime,
-        message: Memory,
+        _message: Memory,
         state?: State,
-        options?: Record<string, unknown>,
+        _options?: Record<string, unknown>,
         callback?: HandlerCallback
     ) => {
         const path: string = this.endpoint.path;
         const requestSchema = this.endpoint.parameters[0].schema;
         const nullableRequestSchema = getNullableSchema(requestSchema) as z.ZodObject<any, any>;
-        const responseSchema = this.endpoint.response;
         const accountAddress = this.account.address
         
         const argumentContext = composeEndpointArgumentContext(requestSchema, state, accountAddress);
@@ -104,29 +127,35 @@ class CompassAction implements Action {
             return;
         }
         const compassApiResponse = await runCompassAction(this.endpoint, endpointCallArgument);
-        console.log(`API output: ${JSON.stringify(compassApiResponse)}`)
+        if (compassApiResponse.success) {
+            return await this.processSuccessfulApiResponse(path, compassApiResponse.data, state, runtime, endpointCallArgument, callback);
+        } else {
+            const errorContext = composeErrorContext((JSON.stringify((compassApiResponse.data as { message: string }).message)), state)
+            const errorResponse = await generateErrorResponse(runtime, errorContext);
+            callback({text: `❌ Compass API Error: ${errorResponse}`});
+        }
+    };
+
+    processSuccessfulApiResponse = async function (path: string, compassApiResponse: object, state: State, runtime: IAgentRuntime, endpointCallArgument: unknown, callback: HandlerCallback): Promise<boolean> {
         if (path.includes('/get')) {
             const readEndpointContext = composeReadEndpointResponseContext(
-                responseSchema,
                 compassApiResponse,
-                state,
-                this.endpoint
+                state
             );
             const readEndpointResponse = await generateReadEndpointResponse(
                 runtime,
                 readEndpointContext
             );
             callback({
-                text: `Following is the response from compass api for ${this.name} action:
-                ${readEndpointResponse}`,
+                text: `${readEndpointResponse}`,
             });
             return;
         } else {
             const chain = (endpointCallArgument as { chain: string }).chain;
             const walletClient = getWalletClient(this.account, chain) as WalletClient & PublicClient;
-            const txHash = await walletClient.sendTransaction(compassApiResponse);
+            const txHash = await walletClient.sendTransaction(compassApiResponse as any);
             const txReceipt = await walletClient.waitForTransactionReceipt({hash: txHash});
-
+    
             if (txReceipt.status === "success") {
                 callback({
                     text: `✅ Transaction executed successfully! Transaction hash: ${txHash}`,
@@ -141,12 +170,12 @@ class CompassAction implements Action {
                 return false;
             }
         }
-    };
+    }
 }
 
 
 export function initializeCompassActions(): Array<Action> {
-    const apiClient = createApiClient('https://api.compasslabs.ai');
+    const apiClient = getApiClient();
     const endpoints = apiClient.api;
 
     const actions: Array<Action> = [];

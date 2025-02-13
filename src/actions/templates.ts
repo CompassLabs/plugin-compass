@@ -35,15 +35,24 @@ Notes:
 };
 
 export const readEndpointResponseTemplate = (
-    schema: z.ZodObject<any, any>,
     modelResponse: object,
-    endpointResponseDescription: string
 ) => {
     return `
-Given the response from the model in the JSON format: ${JSON.stringify(modelResponse)}. The given schema for such response is: ${JSON.stringify(schema.shape)}. 
+Given the model of the onchain read data in the JSON format: ${JSON.stringify(modelResponse)}.
 
-And the description of the response is: ${endpointResponseDescription}.
+You need to return human readable response based on the json format. Explaining the response in a human readable format. Make this concise.
 
-You need to return human readable response based on the schema shape. Explaining the response in a human readable format.
+NOTES: 
+    - this is not transaction data, this is data obtained from the blockchain.
+    - try to explain the data in a way that a user can understand.
 `;
 };
+
+
+export const errorTemplate = (error: string) => {
+    return `
+Given the API error: ${error}.
+
+You need to return the error message in a human readable format. Make it concise.
+`;
+}

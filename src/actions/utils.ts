@@ -1,5 +1,5 @@
 import { z, ZodSchema, ZodObject, ZodOptional, ZodNullable } from 'zod';
-import { argumentTemplate, readEndpointResponseTemplate } from './templates';
+import { argumentTemplate, readEndpointResponseTemplate, errorTemplate } from './templates';
 import {
     IAgentRuntime,
     State,
@@ -66,18 +66,15 @@ async function generateArgument(
 }
 
 function composeReadEndpointResponseContext(
-    schema: z.ZodObject<any, any>,
     modelResponse: object,
     currentState: State,
-    endpoint: Endpoint
 ) {
-    const endpointResponseDescription = endpoint.response.description;
-    console.log(`endpointResponseDescription = ${endpointResponseDescription}`);
     return composeContext({
         state: currentState,
-        template: readEndpointResponseTemplate(schema, modelResponse, endpointResponseDescription),
+        template: readEndpointResponseTemplate(modelResponse),
     });
 }
+
 
 async function generateReadEndpointResponse(
     runtime: IAgentRuntime,
@@ -91,6 +88,30 @@ async function generateReadEndpointResponse(
 
     return response;
 }
+
+function composeErrorContext(
+    error: string,
+    currentState: State
+) {
+    return composeContext({
+        state: currentState,
+        template: errorTemplate(error),
+    });
+}
+
+async function generateErrorResponse(
+    runtime: IAgentRuntime,
+    context: string
+): Promise<string> {
+    const response = await generateText({
+        runtime,
+        context,
+        modelClass: ModelClass.LARGE,
+    });
+
+    return response;
+}
+
 
 type Endpoint = {
     method: string;
@@ -142,4 +163,6 @@ export {
     generateReadEndpointResponse,
     Endpoint,
     getNullableSchema,
+    composeErrorContext,
+    generateErrorResponse
 };
