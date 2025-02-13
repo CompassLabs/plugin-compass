@@ -22,7 +22,7 @@ import {
     composeErrorContext,
     generateErrorResponse
 } from './utils';
-import {getAccount, getWalletClient} from '../providers/wallet';
+import {getAccount, getWalletClient} from './wallet';
 import { PrivateKeyAccount } from 'viem/accounts';
 import { WalletClient, PublicClient } from 'viem';
 
@@ -155,16 +155,19 @@ class CompassAction implements Action {
             const walletClient = getWalletClient(this.account, chain) as WalletClient & PublicClient;
             const txHash = await walletClient.sendTransaction(compassApiResponse as any);
             const txReceipt = await walletClient.waitForTransactionReceipt({hash: txHash});
-    
+            const defaultBlockExplorerUrl = walletClient.chain.blockExplorers.default.url;
+
+            const txHashUrl = `${defaultBlockExplorerUrl}/tx/${txHash}`
+
             if (txReceipt.status === "success") {
                 callback({
-                    text: `✅ Transaction executed successfully! Transaction hash: ${txHash}`,
+                    text: `✅ Transaction executed successfully! Transaction hash: ${txHashUrl}`,
                     content: { hash: txHash, status: "success" },
                 });
                 return true;
             } else {
                 callback({
-                    text: `❌ Transaction failed! Transaction hash: ${txHash}`,
+                    text: `❌ Transaction failed! Transaction hash: ${txHashUrl}`,
                     content: { hash: txHash, status: "failed" },
                 });
                 return false;
