@@ -45,5 +45,26 @@
     "compass-api-tools": "^1.0.5",
     "viem": "2.21.58",
     "zod": "^3.24.2"
+  },
+  "agentConfig": {
+    "pluginType": "elizaos:plugin:1.0.0",
+    "pluginParameters": {
+        "COMPASS_WALLET_PRIVATE_KEY": {
+            "type": "string",
+            "description": "EVM wallet private key"
+        },
+        "COMPASS_ARBITRUM_RPC_URL": {
+            "type": "string",
+            "description": "Arbitrum mainnet RPC URL"
+        },
+        "COMPASS_ETHEREUM_RPC_URL": {
+            "type": "string",
+            "description": "Ethereum mainnet RPC URL"
+        },
+        "COMPASS_BASE_RPC_URL": {
+            "type": "string",
+            "description": "Base mainnet RPC URL"
+        }
+    }
   }
 }
