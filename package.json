@@ -1,5 +1,5 @@
 {
-  "name": "@elizaos/plugin-compass",
+  "name": "@elizaos-plugins/plugin-compass",
   "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
@@ -19,7 +19,6 @@
     "dist"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsup --format cjs,esm --dts",
     "lint": "biome check src/",
     "lint:fix": "biome check --write src/",
