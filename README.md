@@ -4,7 +4,7 @@ The `@elizaos/plugin-compass` is a powerful plugin designed to seamlessly integr
 
 ## Overview
 
-The Compass plugin leverages the [`compass-api-tools`](https://www.npmjs.com/package/compass-api-tools) TypeScript SDK to provide a suite of actions. These actions correspond to various endpoint calls and schemas defined by the Compass API, enabling efficient interaction with the API.
+The Compass plugin leverages the [`@compass-labs/sdk`](https://www.npmjs.com/package/@compass-labs/sdk) TypeScript SDK to provide a suite of actions. These actions correspond to various endpoint calls and schemas defined by the Compass API, enabling efficient interaction with the API.
 
 ## Configuration
 

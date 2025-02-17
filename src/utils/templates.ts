@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { schemas } from 'compass-api-tools';
+import { schemas } from '@compass-labs/sdk';
 
 export const argumentTemplate = (schema: z.ZodObject<any, any>, accountAddress: string) => {
     return `

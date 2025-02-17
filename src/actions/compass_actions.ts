@@ -1,4 +1,4 @@
-import { createApiClient } from 'compass-api-tools';
+import { createApiClient } from '@compass-labs/sdk';
 import {
     Action,
     ActionExample,
