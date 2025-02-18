@@ -1,7 +1,5 @@
 import type { Plugin } from '@elizaos/core';
 import { initializeCompassActions } from './actions/compass_actions';
-import chalk from 'chalk';
-import Table from 'cli-table3';
 
 
 const actions = initializeCompassActions();
