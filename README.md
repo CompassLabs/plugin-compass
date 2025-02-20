@@ -46,3 +46,28 @@ pnpm run build
 ```
 
 before starting up eliza
+
+## Character Configuration
+
+Here are some secrets that need to be set if the plugin was to be used together with a telegram client
+
+```
+...
+"clients": ["telegram"],
+...
+"settings": {
+        ...
+        "secrets": {
+            "OPENAI_API_KEY": "<YOUR_EXAMPLE>",
+            "COMPASS_WALLET_PRIVATE_KEY": "<YOUR_EXAMPLE>",
+            "COMPASS_ARBITRUM_RPC_URL": "<YOUR_EXAMPLE>",
+            "COMPASS_ETHEREUM_RPC_URL": "<YOUR_EXAMPLE>",
+            "COMPASS_BASE_RPC_URL": "<YOUR_EXAMPLE>",
+            "TELEGRAM_BOT_TOKEN": "<YOUR_EXAMPLE>"
+        }
+    },
+...
+"plugins": ["@elizaos-plugins/plugin-compass"],
+...
+```
+
