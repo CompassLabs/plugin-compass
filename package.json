@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@elizaos/core": "^0.1.9",
-    "@compass-labs/sdk": "^1.0.8",
+    "@compass-labs/sdk": "^1.0.82",
     "viem": "2.21.58",
     "zod": "^3.24.2"
   },
